@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { Dashboard } from "@/components/Dashboard";
 import { Footer } from "@/components/Footer";
+import { Loading } from "@/components/Loading";
 import { getHavenData, toSummary } from "@/lib/data";
 
 // Rendered from the cached latest pull (lib/data.ts), streamed in behind the boundary.
@@ -16,7 +17,7 @@ async function HomeContent() {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div className="wrap shell" aria-busy="true" />}>
+    <Suspense fallback={<Loading label="Loading havens…" />}>
       <HomeContent />
     </Suspense>
   );

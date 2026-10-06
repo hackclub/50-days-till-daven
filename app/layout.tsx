@@ -20,6 +20,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${display.variable} ${body.variable}`}>
+      <head>
+        {/* the page is already themed; stop the Dark Reader extension from recolouring it */}
+        <meta name="darkreader-lock" />
+      </head>
       <body>{children}</body>
     </html>
   );

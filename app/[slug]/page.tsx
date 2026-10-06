@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { EventView } from "@/components/EventView";
 import { Footer } from "@/components/Footer";
+import { Loading } from "@/components/Loading";
 import { findEvent, getHavenData, toSummary } from "@/lib/data";
 
 export async function generateStaticParams() {
@@ -36,7 +37,7 @@ async function EventContent({ params }: { params: PageProps<"/[slug]">["params"]
 
 export default function EventPage(props: PageProps<"/[slug]">) {
   return (
-    <Suspense fallback={<div className="wrap shell" aria-busy="true" />}>
+    <Suspense fallback={<Loading label="Loading haven…" />}>
       <EventContent params={props.params} />
     </Suspense>
   );

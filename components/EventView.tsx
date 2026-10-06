@@ -218,7 +218,7 @@ export function EventView({ event: e, all, generatedAt }: { event: EventDetail; 
             </section>
           </div>
         ) : (
-          <p className="panel empty">More stats after {MIN_BREAKDOWN} signups.</p>
+          <p className="panel note">More stats after {MIN_BREAKDOWN} signups.</p>
         )}
       </main>
     </>

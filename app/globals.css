@@ -349,6 +349,48 @@ input {
   color: var(--yellow);
 }
 
-.shell {
-  min-height: 100vh;
+.note {
+  color: var(--brown);
+}
+
+/* ───────── loading (Suspense fallback) ───────── */
+
+.loading-hero {
+  min-height: min(70vh, 640px);
+  display: grid;
+  place-items: center;
+}
+
+.loading-inner {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+}
+
+.loading-daven {
+  width: 96px;
+  height: auto;
+  animation: daven-hop 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) infinite alternate;
+  filter: drop-shadow(0 6px 10px rgb(150 60 10 / 0.25));
+}
+
+.loading-text {
+  font-family: var(--display);
+  font-size: clamp(26px, 3.2vw, 36px);
+  letter-spacing: -0.04em;
+}
+
+@keyframes daven-hop {
+  from {
+    transform: translateY(6px) rotate(-4deg);
+  }
+  to {
+    transform: translateY(-14px) rotate(4deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-daven {
+    animation: none;
+  }
 }
