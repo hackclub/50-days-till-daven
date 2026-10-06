@@ -116,6 +116,10 @@ async function listAll(table: string, fields: string[], filter: string, token: s
   return records;
 }
 
+/** A readable message even for network errors, which Node sometimes reports with an empty one. */
+export const describeError = (err: unknown) =>
+  (err as Error)?.message || (err as NodeJS.ErrnoException)?.code || String(err);
+
 /** One full pull: one request per 100 records (~25 today), at most 1 per second. Called by app/api/pull. */
 export async function loadFromAirtable(token: string): Promise<RawData> {
   if (!AIRTABLE_BASE_ID) throw new Error("AIRTABLE_BASE_ID is not set");

@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "pnpm pull && next build",
     "start": "next start",
     "lint": "eslint",
     "snapshot": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/snapshot.ts",
-    "land-dots": "node scripts/land-dots.mjs"
+    "land-dots": "node scripts/land-dots.mjs",
+    "pull": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/pull.ts"
   },
   "dependencies": {
     "@photostructure/tz-lookup": "^11.7.0",

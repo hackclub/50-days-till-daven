@@ -1,8 +1,9 @@
 import { timingSafeEqual } from "node:crypto";
 import { revalidateTag } from "next/cache";
 import { headers } from "next/headers";
-import { loadFromAirtable } from "@/lib/airtable";
-import { aggregate, HAVEN_TAG } from "@/lib/data";
+import { describeError, loadFromAirtable } from "@/lib/airtable";
+import { aggregate } from "@/lib/aggregate";
+import { HAVEN_TAG } from "@/lib/data";
 import { readHavenData, saveHavenData } from "@/lib/storage";
 
 // The only code that talks to Airtable. Vercel Cron calls it every 12 hours (vercel.json), sending
@@ -35,7 +36,7 @@ async function pull(token: string): Promise<Response> {
     console.log(`[haven] pulled ${data.events.length} events in ${Math.round((Date.now() - t0) / 1000)}s`);
     return Response.json({ events: data.events.length, pulledAt: new Date(data.generatedAt).toISOString() });
   } catch (err) {
-    console.error(`[haven] pull failed: ${(err as Error).message}`);
+    console.error(`[haven] pull failed: ${describeError(err)}`);
     return new Response("Pull failed; see the function logs.", { status: 502 });
   }
 }
