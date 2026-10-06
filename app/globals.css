@@ -1,40 +1,66 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Theme lifted from haven.hackclub.com (github.com/hackclub/haven, src/app.css). */
+
+/* Accented letters Jua lacks (Kraków, Brașov, Chambéry…), only fetched when used. */
+@font-face {
+  font-family: "Jua Extras";
+  src: url("/fonts/jua-extras.woff2") format("woff2");
+  font-display: swap;
+  unicode-range:
+    U+60, U+A1-AC, U+AE-17E, U+18F, U+192, U+1CD-1CE, U+1D4, U+218-21B, U+237, U+259, U+2C6-2CC, U+2D8-2DD,
+    U+1E9E, U+1EA0-1EF9, U+2010, U+2012-2015, U+2018-201A, U+201C-201E, U+2020-2022, U+2026, U+2030,
+    U+2032-2033, U+2039-203A, U+2044, U+20AC, U+20B9, U+2122, U+2212, U+2248, U+2260, U+2264-2265;
 }
 
-@media (prefers-color-scheme: dark) {
+:root {
+  color-scheme: light;
+  --green: #b8c220;
+  --green-deep: #97a01a;
+  --orange: #ed5615;
+  --orange-bright: #fa681b;
+  --yellow: #ffd059;
+  --butter: #ffe382;
+  --brown: #b8774a;
+  --brown-light: #dda47d;
+  --panel: rgb(255 255 255 / 0.85);
+  --line: rgb(237 86 21 / 0.16);
+  --wash: rgb(237 86 21 / 0.08);
+  /* daily signup intensity: any signup already reads as solid orange */
+  --l0: rgb(237 86 21 / 0.09);
+  --l1: #f7931e;
+  --l2: #ed5615;
+  --l3: #c2410c;
+  --l4: #8a2b07;
+
+  --display: var(--font-darumadrop), "Jua Extras", var(--font-jua), ui-rounded, system-ui, sans-serif;
+  --body: "Jua Extras", var(--font-jua), ui-rounded, system-ui, sans-serif;
+  --gutter: 16px;
+  --max: 1120px;
+}
+
+@media (min-width: 720px) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --gutter: 32px;
   }
 }
 
-html {
-  height: 100%;
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
-  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
   margin: 0;
+  background: var(--green);
+  color: var(--orange);
+  font: 17px/1.35 var(--body);
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
 }
 
 a {
@@ -42,8 +68,287 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+  font-weight: 400;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+::selection {
+  background: var(--yellow);
+  color: var(--orange);
+}
+
+:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
+}
+
+.muted {
+  color: var(--brown);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ───────── hero (shared by both pages) ───────── */
+
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--green) url("/haven/hero-bg.webp") center top / cover no-repeat;
+  color: #fff;
+  padding: clamp(84px, 9vw, 112px) calc(var(--gutter) + 18px) clamp(48px, 6vw, 72px);
+}
+
+/* the double yellow rule around the hero, as on haven.hackclub.com */
+.hero::before,
+.hero::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+  background-repeat: no-repeat;
+  background-image: linear-gradient(var(--yellow), var(--yellow)), linear-gradient(var(--yellow), var(--yellow));
+  --o: clamp(0.5rem, 1.1vw, 1rem);
+  --g: clamp(0.75rem, 1.1vw, 1rem);
+  --w: clamp(3px, 0.35vw, 5px);
+}
+
+.hero::before {
+  inset: var(--o) calc(var(--o) + var(--g));
+  background-size: 100% var(--w);
+  background-position:
+    left top,
+    left bottom;
+}
+
+.hero::after {
+  inset: calc(var(--o) + var(--g)) var(--o);
+  background-size: var(--w) 100%;
+  background-position:
+    left top,
+    right top;
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  max-width: var(--max);
+  margin: 0 auto;
+}
+
+.nav-banner {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 0;
+  width: min(30rem, max(48%, 15rem));
+  height: auto;
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
+}
+
+.hero-nav {
+  position: absolute;
+  z-index: 3;
+  top: clamp(14px, 1.6vw, 24px);
+  left: calc(var(--gutter) + 18px);
+  right: calc(var(--gutter) + 18px);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hero-day {
+  margin-left: auto;
+  font-family: var(--display);
+  font-size: clamp(20px, 2.4vw, 30px);
+  letter-spacing: -0.03em;
+  color: var(--yellow);
+  white-space: nowrap;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px 0 12px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--orange);
+  font-family: var(--display);
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.back:hover {
+  transform: scale(1.05);
+}
+
+.glow {
+  text-shadow: 0 0 4px var(--orange);
+}
+
+/* ───────── panels ───────── */
+
+.page {
+  display: grid;
+  gap: clamp(16px, 2vw, 24px);
+  max-width: calc(var(--max) + var(--gutter) * 2);
+  margin: 0 auto;
+  padding: clamp(24px, 4vw, 40px) var(--gutter) 0;
+}
+
+.panel {
+  background: var(--panel);
+  border-radius: 1.2rem;
+  padding: clamp(18px, 3vw, 32px);
+  min-width: 0;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-bottom: 18px;
+}
+
+.panel-head h2 {
+  font-family: var(--display);
+  font-size: clamp(28px, 3.4vw, 40px);
+  letter-spacing: -0.05em;
+  line-height: 0.9;
+}
+
+.panel-head h2 .count {
+  color: var(--brown-light);
+  margin-left: 10px;
+}
+
+.search {
+  width: 100%;
+  max-width: 280px;
+  height: 44px;
+  padding: 0 18px;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--orange);
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.search::placeholder {
+  color: var(--brown-light);
+}
+
+.search:focus {
+  border-color: var(--yellow);
+}
+
+.empty {
+  color: var(--brown);
+  padding: 8px 0;
+}
+
+/* tooltip shared by charts and the globe */
+.tip {
+  position: absolute;
+  z-index: 20;
+  pointer-events: none;
+  background: #fff;
+  color: var(--orange);
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 15px;
+  line-height: 1.2;
+  white-space: nowrap;
+  transform: translate(-50%, calc(-100% - 10px));
+  box-shadow: 0 4px 16px rgb(150 60 10 / 0.18);
+}
+
+.tip strong {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 20px;
+  letter-spacing: -0.03em;
+}
+
+.tip-sub {
+  color: var(--brown);
+  font-size: 13px;
+}
+
+/* ───────── footer ───────── */
+
+.foot {
+  position: relative;
+  margin-top: clamp(48px, 8vw, 96px);
+  padding: 0 var(--gutter) clamp(24px, 3vw, 36px);
+  min-height: clamp(110px, 18vw, 230px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  color: #fff;
+  font-size: 15px;
+  text-align: center;
+}
+
+.foot-bushes {
+  position: absolute;
+  inset: auto 0 0;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.foot p {
+  position: relative;
+  z-index: 1;
+}
+
+.foot a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.foot a:hover {
+  color: var(--yellow);
+}
+
+.shell {
+  min-height: 100vh;
 }

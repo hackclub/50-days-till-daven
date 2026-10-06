@@ -6,21 +6,31 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "snapshot": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/snapshot.ts",
+    "land-dots": "node scripts/land-dots.mjs"
   },
   "dependencies": {
+    "@photostructure/tz-lookup": "^11.7.0",
     "next": "16.4.0",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
+    "@types/d3-geo": "^3.1.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/topojson-client": "^3.1.5",
     "babel-plugin-react-compiler": "1.0.0",
+    "d3-geo": "^3.1.1",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
-    "typescript": "^5"
+    "topojson-client": "^3.1.0",
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "world-atlas": "^2.0.2"
   },
   "packageManager": "pnpm@10.20.0"
 }

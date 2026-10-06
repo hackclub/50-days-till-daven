@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 50 Days Till Daven
 
-## Getting Started
+A public dashboard for the 50 Days Till Daven streak program for Hack Club Haven.
 
-First, run the development server:
+Each Haven event needs at least one new signup every day from Sept 25 to Nov 13 (50 days before Haven on Nov 14). Days run midnight to midnight in the event's own timezone. An event that holds a 30-day streak earns $100.
+
+- `/` shows a globe of every event (dot size is streak length), the havens on a streak ranked by length, and the ones without a streak.
+- `/<slug>` (the `Slug` from the Airtable Events table) shows one event's streak, its progress toward 30 days, a GitHub-style daily calendar, a running total, and signups by weekday, local hour, age and how people heard about Haven.
+
+The look, fonts and artwork come from [haven.hackclub.com](https://haven.hackclub.com) ([hackclub/haven](https://github.com/hackclub/haven)).
+
+## How streaks are counted
+
+- **Signups**: rows in the Attendees table with `Role = Participant`, excluding `Soft Deleted` (duplicates) and `!Withdrawn`.
+- **Day**: the `Signup Time` converted to the event's timezone. The timezone is looked up from the event's `!Latitude` / `!Longitude`.
+- **Current streak**: consecutive program days with at least one signup, ending today if today already has one, otherwise yesterday (today still has until local midnight).
+- **Events**: everything in the Events table except `Cancelled` and `_Is Test`.
+
+The rules are in [`lib/config.ts`](lib/config.ts) and the logic is in [`lib/streak.ts`](lib/streak.ts). Streaks are computed in the browser against the live clock, so day rollovers stay accurate between data refreshes.
+
+## Data, caching and privacy
+
+The server pulls Airtable once every 12 hours in the background ([`lib/store.ts`](lib/store.ts)) and keeps the result in memory. Pages render from that copy and never call Airtable themselves.
+
+- **A pull** is about 25 requests: one per 100 rows, across the Events (Active only) and Attendees (counted signups only) tables, fetching just the fields the dashboard uses. Requests go one at a time, at least 1.05s apart, so Airtable never sees more than 1 per second. After a 429 the pull waits 30s, as Airtable asks.
+- **Restarts** don't pull again. Each pull is also saved to `.next/cache/haven-airtable.json` (or `$HAVEN_CACHE_FILE`), and a restarted server serves that copy and waits out the rest of its 12 hours. Only the very first request on a brand-new server waits for the first pull, about 30 seconds.
+- **If a pull fails**, the last good copy stays up and the next scheduled pull tries again.
+- **Open tabs** reload their data from our server once it's over 12 hours old.
+
+The 12-hour gap has a cost: a signup made after the last pull won't show until the next one. Near midnight, that can make an event look like it missed a day it actually made.
+
+### What's public
+
+- Only **Active** events, the same set haven.hackclub.com publishes. On Hold, Cancelled, Merged and test events never leave the server.
+- Only per-event aggregates: daily signup counts and totals, plus the hour, weekday and age histograms, grouped "how did you hear" buckets and referral share. These breakdowns are left out entirely for events with fewer than 5 signups (`MIN_BREAKDOWN`), so a single teenager can't be singled out. Names, emails, free-text answers and record IDs never leave the server.
+
+### Keeping the token safe
+
+- `AIRTABLE_TOKEN` and `AIRTABLE_BASE_ID` are read only in server-only modules (`lib/data.ts`, `lib/store.ts`, `lib/airtable.ts`, `lib/airtable-config.ts`, all guarded by `import "server-only"`). Importing any of them from browser code fails the build.
+- The token is only ever sent to `https://api.airtable.com`. `AIRTABLE_API_URL` exists for a local test mock and rejects any other host.
+- Use a dedicated token with only the `data.records:read` scope, and give it access to only the YSWS - Haven base. Set it as a secret in your host's runtime environment; the build doesn't need it.
+
+## Running it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+cp .env.example .env.local   # add the token and base id
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Without `AIRTABLE_TOKEN`, the app reads `data/snapshot.json` (gitignored). Create one with `pnpm snapshot`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Deploy it as one long-running Node server (`pnpm build && pnpm start`, e.g. in a Docker container) with `AIRTABLE_TOKEN` and `AIRTABLE_BASE_ID` set. Every server process pulls on its own schedule, so run a single instance. A serverless host with many short-lived instances would pull far more often.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`public/land-dots.json` (the globe's dotted land) is generated by `pnpm land-dots` and only needs regenerating if you want a different dot density.
