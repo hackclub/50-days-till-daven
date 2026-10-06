@@ -116,7 +116,7 @@ async function listAll(table: string, fields: string[], filter: string, token: s
   return records;
 }
 
-/** One full pull: one request per 100 records (~25 today), at most 1 per second. Called by lib/store.ts. */
+/** One full pull: one request per 100 records (~25 today), at most 1 per second. Called by app/api/pull. */
 export async function loadFromAirtable(token: string): Promise<RawData> {
   if (!AIRTABLE_BASE_ID) throw new Error("AIRTABLE_BASE_ID is not set");
   const events = await listAll(AIRTABLE_TABLES.events, Object.values(EVENT_FIELDS), EVENT_FILTER, token);
@@ -135,6 +135,6 @@ export async function loadSnapshot(): Promise<RawData> {
     const raw = await readFile(path.join(process.cwd(), "data", "snapshot.json"), "utf8");
     return { ...(JSON.parse(raw) as RawData), origin: "snapshot" };
   } catch {
-    return { fetchedAt: Date.now(), origin: "empty", events: [], signups: [] };
+    return { fetchedAt: 0, origin: "empty", events: [], signups: [] };
   }
 }

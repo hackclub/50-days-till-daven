@@ -5,6 +5,12 @@ import { EventView } from "@/components/EventView";
 import { Footer } from "@/components/Footer";
 import { findEvent, getHavenData, toSummary } from "@/lib/data";
 
+export async function generateStaticParams() {
+  const { events } = await getHavenData();
+  // Cache Components needs at least one param to validate the route
+  return events.length ? events.map((e) => ({ slug: e.slug })) : [{ slug: "__none__" }];
+}
+
 export async function generateMetadata({ params }: PageProps<"/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const event = findEvent(await getHavenData(), slug);

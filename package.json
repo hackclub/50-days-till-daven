@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@photostructure/tz-lookup": "^11.7.0",
+    "@vercel/blob": "^2.8.1",
     "next": "16.4.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",

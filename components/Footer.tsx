@@ -27,7 +27,7 @@ export function Footer({ generatedAt }: { generatedAt: number }) {
     <footer className="foot">
       <Image className="foot-bushes" src="/haven/bottom-bushes.webp" alt="" aria-hidden="true" width={2147} height={415} sizes="100vw" />
       <p>
-        {live ? `Updated ${age < 60_000 ? "just now" : `${formatDuration(age)} ago`} · ` : ""}
+        {live && generatedAt > 0 ? `Updated ${age < 60_000 ? "just now" : `${formatDuration(age)} ago`} · ` : ""}
         <a href="https://haven.hackclub.com">haven.hackclub.com</a>
       </p>
     </footer>

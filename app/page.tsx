@@ -3,7 +3,7 @@ import { Dashboard } from "@/components/Dashboard";
 import { Footer } from "@/components/Footer";
 import { getHavenData, toSummary } from "@/lib/data";
 
-// Rendered per request from the in-memory Airtable pull, streamed in behind the boundary.
+// Rendered from the cached latest pull (lib/data.ts), streamed in behind the boundary.
 async function HomeContent() {
   const data = await getHavenData();
   return (

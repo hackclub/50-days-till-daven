@@ -1,9 +1,10 @@
 import "server-only";
 import tzlookup from "@photostructure/tz-lookup";
-import { connection } from "next/server";
-import { CHART_DAYS, MIN_BREAKDOWN } from "./config";
+import { cacheLife, cacheTag } from "next/cache";
+import { loadSnapshot } from "./airtable";
+import { CHART_DAYS, MIN_BREAKDOWN, PULL_EVERY_MS } from "./config";
 import { chartIndex, localParts } from "./dates";
-import { getRaw } from "./store";
+import { readHavenData } from "./storage";
 import { AGE_BUCKETS, type Breakdown, type EventDetail, type EventSummary, type HavenData, type RawData } from "./types";
 
 function timezoneFor(lat: number | null, lon: number | null) {
@@ -70,14 +71,18 @@ export function aggregate(raw: RawData): HavenData {
   };
 }
 
-let last: { raw: RawData; data: HavenData } | null = null;
+export const HAVEN_TAG = "haven";
 
-/** What every page renders from: the in-memory copy of the latest 12-hourly pull (lib/store.ts). */
+/**
+ * What every page renders from: the latest pull saved by /api/pull, cached across requests and
+ * instances. /api/pull clears the cache after each pull, so reading it never touches Airtable.
+ * Before the first pull (or locally with no data/haven.json) it falls back to data/snapshot.json.
+ */
 export async function getHavenData(): Promise<HavenData> {
-  await connection(); // render per request from memory, never at build time
-  const raw = await getRaw();
-  if (last?.raw !== raw) last = { raw, data: aggregate(raw) };
-  return last.data;
+  "use cache: remote";
+  cacheLife({ stale: 300, revalidate: PULL_EVERY_MS / 1000, expire: 30 * 86_400 });
+  cacheTag(HAVEN_TAG);
+  return (await readHavenData()) ?? aggregate(await loadSnapshot());
 }
 
 export function toSummary(e: EventDetail): EventSummary {

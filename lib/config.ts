@@ -14,5 +14,5 @@ export const MIN_BREAKDOWN = 5;
 export const CHART_START = "2026-09-21";
 export const CHART_DAYS = 56;
 
-// Airtable is pulled once every 12 hours in the background (lib/store.ts).
+// Airtable is pulled every 12 hours by Vercel Cron (vercel.json → app/api/pull). Keep the two in sync.
 export const PULL_EVERY_MS = 12 * 60 * 60_000;
