@@ -6,7 +6,7 @@ import { aggregate } from "@/lib/aggregate";
 import { HAVEN_TAG } from "@/lib/data";
 import { readHavenData, saveHavenData } from "@/lib/storage";
 
-// The only code that talks to Airtable. Vercel Cron calls it every 12 hours (vercel.json), sending
+// The only code that talks to Airtable. Vercel Cron calls it every hour (vercel.json), sending
 // `Authorization: Bearer $CRON_SECRET`. A pull is ~25 requests, at most 1 per second (lib/airtable.ts).
 export const maxDuration = 300;
 

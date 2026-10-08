@@ -20,15 +20,15 @@ The rules are in [`lib/config.ts`](lib/config.ts) and the logic is in [`lib/stre
 
 ## Data, caching and privacy
 
-Airtable is pulled every 12 hours by a Vercel Cron job ([`vercel.json`](vercel.json)) that calls [`/api/pull`](app/api/pull/route.ts). That route is the only code that talks to Airtable:
+Airtable is pulled every hour by a Vercel Cron job ([`vercel.json`](vercel.json)) that calls [`/api/pull`](app/api/pull/route.ts). That route is the only code that talks to Airtable:
 
 - **A pull** is about 25 requests: one per 100 rows, across the Events (Active only) and Attendees (counted signups only) tables, fetching just the fields the dashboard uses. Requests go one at a time, at least 1.05s apart, so Airtable never sees more than 1 per second. After a 429 the pull waits 30s, as Airtable asks.
 - **The result** is aggregated into exactly what the pages show (no raw signup rows) and saved to a private Vercel Blob ([`lib/storage.ts`](lib/storage.ts)). The route then clears the page cache.
-- **Pages** render from that saved copy, cached across all requests and instances (`getHavenData` in [`lib/data.ts`](lib/data.ts)). Visitor traffic never reaches Airtable, so Airtable gets about 50 requests a day however busy the site is.
+- **Pages** render from that saved copy, cached across all requests and instances (`getHavenData` in [`lib/data.ts`](lib/data.ts)). Visitor traffic never reaches Airtable, so Airtable gets about 600 requests a day however busy the site is.
 - **The route** needs `Authorization: Bearer $CRON_SECRET`, which Vercel Cron sends automatically. It also skips a pull within 10 minutes of the last one, so nobody can make it hammer Airtable.
 - **If a pull fails**, the last good copy stays up and the next scheduled pull tries again.
 
-The 12-hour gap has a cost: a signup made after the last pull won't show until the next one. Near midnight, that can make an event look like it missed a day it actually made.
+The hourly gap has a cost: a signup made after the last pull won't show until the next one, up to an hour later. In the last hour before local midnight, that can make an event look like it missed a day it actually made.
 
 ### What's public
 
@@ -49,7 +49,7 @@ pnpm install
 pnpm dev
 ```
 
-Locally, with no Blob token, pulls are saved to `data/haven.json` (gitignored). `pnpm pull` pulls if that copy is missing or over 12 hours old, and so does `pnpm build`. To force one, call the route the way the cron does:
+Locally, with no Blob token, pulls are saved to `data/haven.json` (gitignored). `pnpm pull` pulls if that copy is missing or over an hour old, and so does `pnpm build`. To force one, call the route the way the cron does:
 
 ```bash
 curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/pull
@@ -59,14 +59,14 @@ Before the first pull the app reads `data/snapshot.json`, which you can make wit
 
 ## Deploying on Vercel
 
-[`vercel.json`](vercel.json) sets up the framework, install and build commands, and the 12-hour cron. Vercel doesn't allow storage or secrets in that file, so those are two dashboard steps:
+[`vercel.json`](vercel.json) sets up the framework, install and build commands, and the hourly cron. Vercel doesn't allow storage or secrets in that file, so those are two dashboard steps:
 
 1. Import the repo into Vercel.
 2. In the project's Storage tab, create a **private** Blob store and connect it. That adds `BLOB_READ_WRITE_TOKEN`.
 3. Set `AIRTABLE_TOKEN`, `AIRTABLE_BASE_ID` and `CRON_SECRET` (a long random string, e.g. `openssl rand -hex 32`).
-4. Deploy. The build does the first pull itself ([`scripts/pull.ts`](scripts/pull.ts)), so the site has data straight away. Later builds skip it while the saved pull is under 12 hours old, and a failed pull never blocks a deploy.
+4. Deploy. The build does the first pull itself ([`scripts/pull.ts`](scripts/pull.ts)), so the site has data straight away. Later builds skip it while the saved pull is under an hour old, and a failed pull never blocks a deploy.
 
-**The project must be on a Pro team.** Vercel's Hobby plan only allows daily crons, and a deploy with the 12-hour schedule fails there. On Hobby, change the schedule in `vercel.json` to once a day (e.g. `"0 0 * * *"`).
+**The project must be on a Pro team.** Vercel's Hobby plan only allows daily crons, and a deploy with the hourly schedule fails there. On Hobby, change the schedule in `vercel.json` to once a day (e.g. `"0 0 * * *"`).
 
 To pull outside the schedule, call the route the way the cron does:
 
