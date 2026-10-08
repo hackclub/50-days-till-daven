@@ -1,6 +1,6 @@
 // Runs before `next build` (package.json). On a fresh deploy there's no saved pull yet, so this does
 // the first one and the site has data immediately; after that the saved copy is usually less than
-// 12 hours old and this does nothing (the cron keeps it fresh). A failed pull never blocks a deploy.
+// an hour old and this does nothing (the cron keeps it fresh). A failed pull never blocks a deploy.
 import { describeError, loadFromAirtable } from "../lib/airtable";
 import { aggregate } from "../lib/aggregate";
 import { PULL_EVERY_MS } from "../lib/config";
