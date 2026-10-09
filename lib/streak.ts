@@ -13,6 +13,11 @@ export type Streak = {
   reachable: boolean; // 30-day goal still possible (or already hit)
 };
 
+/** Place among `currents`: equal streaks share a place and the next streak takes the next one (1, 1, 2), never skipping. */
+export function streakRank(current: number, currents: number[]): number {
+  return 1 + new Set(currents.filter((c) => c > current)).size;
+}
+
 export function computeStreak(days: number[], tz: string, now: number): Streak {
   const rawToday = chartIndex(localParts(now, tz).date);
   const programOver = rawToday > PROGRAM_END_INDEX;

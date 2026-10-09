@@ -4,7 +4,7 @@ import Image from "next/image";
 import { MIN_BREAKDOWN, REWARD, STREAK_GOAL } from "@/lib/config";
 import { chartDate, formatClock, formatDay, PROGRAM_START_INDEX } from "@/lib/dates";
 import { SOURCES } from "@/lib/sources";
-import { computeStreak, type Streak } from "@/lib/streak";
+import { computeStreak, streakRank, type Streak } from "@/lib/streak";
 import { AGE_BUCKETS, type EventDetail, type EventSummary } from "@/lib/types";
 import { Columns } from "./charts/Columns";
 import { ContributionGrid } from "./charts/ContributionGrid";
@@ -38,7 +38,7 @@ export function EventView({ event: e, all, generatedAt }: { event: EventDetail; 
   const { now, tz } = useNow(generatedAt, 15_000);
   const s = computeStreak(e.days, e.tz, now);
 
-  const rank = s.current > 0 ? 1 + all.filter((o) => computeStreak(o.days, o.tz, now).current > s.current).length : null;
+  const rank = s.current > 0 ? streakRank(s.current, all.map((o) => computeStreak(o.days, o.tz, now).current)) : null;
   let bestDay = -1;
   e.days.forEach((n, i) => {
     if (i <= s.todayIndex && n > 0 && (bestDay < 0 || n > e.days[bestDay])) bestDay = i;
