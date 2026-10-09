@@ -488,3 +488,21 @@
   color: #fff;
   text-shadow: 0 0 4px var(--orange);
 }
+
+/* ───────── all signups (/global) ───────── */
+
+.gl-tiles {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 600px) and (max-width: 859px) {
+  .gl-tiles {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 960px) {
+  .gl-tiles {
+    padding-top: 0;
+  }
+}

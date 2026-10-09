@@ -2,9 +2,9 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { loadSnapshot } from "./airtable";
 import { aggregate } from "./aggregate";
-import { PULL_EVERY_MS } from "./config";
+import { CHART_DAYS, PULL_EVERY_MS } from "./config";
 import { readHavenData } from "./storage";
-import type { EventDetail, EventSummary, HavenData } from "./types";
+import type { EventDetail, EventSummary, GlobalStats, HavenData } from "./types";
 
 export const HAVEN_TAG = "haven";
 
@@ -23,6 +23,19 @@ export async function getHavenData(): Promise<HavenData> {
 export function toSummary(e: EventDetail): EventSummary {
   const { slug, name, city, country, cap, lat, lon, tz, days, total } = e;
   return { slug, name, city, country, cap, lat, lon, tz, days, total };
+}
+
+/** Every event added together for /global. A day is still each event's own local day. */
+export function globalStats(data: HavenData): GlobalStats {
+  const days = new Array(CHART_DAYS).fill(0);
+  let before = 0;
+  let total = 0;
+  for (const e of data.events) {
+    e.days.forEach((n, i) => (days[i] += n));
+    before += e.before;
+    total += e.total;
+  }
+  return { days, before, total, breakdown: data.combined ?? null };
 }
 
 export function findEvent(data: HavenData, param: string) {

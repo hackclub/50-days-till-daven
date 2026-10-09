@@ -5,6 +5,7 @@ A public dashboard for the 50 Days Till Daven streak program for Hack Club Haven
 Each Haven event needs at least one new signup every day from Sept 25 to Nov 13 (50 days before Haven on Nov 14). Days run midnight to midnight in the event's own timezone. An event that holds a 30-day streak earns $100.
 
 - `/` shows a globe of every event (dot size is streak length), the havens on a streak ranked by length, and the ones without a streak.
+- `/global` adds every haven together: total signups, signups per day, a running total, the same breakdowns as an event page, and the top countries.
 - `/<slug>` (the `Slug` from the Airtable Events table) shows one event's streak, its progress toward 30 days, a GitHub-style daily calendar, a running total, and signups by weekday, local hour, age and how people heard about Haven.
 
 The look, fonts and artwork come from [haven.hackclub.com](https://haven.hackclub.com) ([hackclub/haven](https://github.com/hackclub/haven)).
@@ -33,7 +34,7 @@ The hourly gap has a cost: a signup made after the last pull won't show until th
 ### What's public
 
 - Only **Active** events, the same set haven.hackclub.com publishes. On Hold, Cancelled, Merged and test events never leave the server.
-- Only per-event aggregates: daily signup counts and totals, plus the hour, weekday and age histograms, grouped "how did you hear" buckets and referral share. These breakdowns are left out entirely for events with fewer than 5 signups (`MIN_BREAKDOWN`), so a single teenager can't be singled out. Names, emails, free-text answers and record IDs never leave the server.
+- Only per-event aggregates: daily signup counts and totals, plus the hour, weekday and age histograms, grouped "how did you hear" buckets and referral share. These breakdowns are left out entirely for events with fewer than 5 signups (`MIN_BREAKDOWN`), so a single teenager can't be singled out. `/global` adds the breakdowns of every event together; the small events only go in once they add up to 5 signups between them, so subtracting the published ones can't give back a small event's own. Names, emails, free-text answers and record IDs never leave the server.
 
 ### Keeping the token safe
 
