@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { computeStreak, type Streak } from "@/lib/streak";
+import { computeStreak, streakRank, type Streak } from "@/lib/streak";
 import type { EventSummary } from "@/lib/types";
 import { DayStrip } from "./DayStrip";
 import { Globe, type GlobeMarker } from "./Globe";
@@ -34,9 +34,8 @@ export function Dashboard({ events, generatedAt }: { events: EventSummary[]; gen
     .sort((a, b) => b.s.current - a.s.current || a.e.city.localeCompare(b.e.city));
   const noStreak = shown.filter((r) => r.s.current === 0).sort((a, b) => a.e.city.localeCompare(b.e.city));
 
-  // equal streaks share a rank
-  const ranks: number[] = [];
-  onStreak.forEach((r, i) => ranks.push(i && onStreak[i - 1].s.current === r.s.current ? ranks[i - 1] : i + 1));
+  // ranked against every haven, so filtering doesn't renumber them
+  const currents = streaking.map((r) => r.s.current);
 
   return (
     <>
@@ -80,10 +79,10 @@ export function Dashboard({ events, generatedAt }: { events: EventSummary[]; gen
             />
           </div>
           <ol className="board">
-            {onStreak.map(({ e, s }, i) => (
+            {onStreak.map(({ e, s }) => (
               <li key={e.slug}>
                 <Link href={href(e)} className="board-row">
-                  <span className="rank num">{ranks[i]}</span>
+                  <span className="rank num">{streakRank(s.current, currents)}</span>
                   <span className="who">
                     <span className="city">{e.city}</span>
                     <span className="country">{e.country}</span>
