@@ -2,11 +2,12 @@ import "server-only";
 import tzlookup from "@photostructure/tz-lookup";
 import { CHART_DAYS, MIN_BREAKDOWN } from "./config";
 import { chartIndex, localParts } from "./dates";
+import { inScope } from "./scope";
 import type { Source } from "./sources";
 import { AGE_BUCKETS, type Breakdown, type CombinedBreakdown, type EventDetail, type HavenData, type RawData } from "./types";
 
 // Turns a raw pull into exactly what the pages show: per-event daily counts in local time, plus
-// breakdowns (left out below MIN_BREAKDOWN signups) and all of them combined for /global.
+// breakdowns (left out below MIN_BREAKDOWN signups) and all of them combined for /global, worldwide and US only.
 // Shared by /api/pull and scripts/pull.ts.
 
 function timezoneFor(lat: number | null, lon: number | null) {
@@ -41,7 +42,7 @@ function addBreakdown(to: Breakdown, from: Breakdown) {
 }
 
 /**
- * Events below MIN_BREAKDOWN only go into the combined breakdown together, and only once they add up
+ * Events below MIN_BREAKDOWN only go into a combined breakdown together, and only once they add up
  * to MIN_BREAKDOWN signups: otherwise subtracting the published per-event breakdowns from it would
  * give back a small event's own.
  */
@@ -94,13 +95,21 @@ export function aggregate(raw: RawData): HavenData {
     if (s.referred) b.referred++;
   }
 
+  // Worldwide is the US and everywhere else added together, each pooled on its own, so subtracting
+  // the US-only breakdown from it can't single out a small event outside the US either.
   const events = [...byId.values()];
+  const us = combineBreakdowns(events.filter((e) => inScope(e.country, "us")));
+  const rest = combineBreakdowns(events.filter((e) => !inScope(e.country, "us")));
+  const world = { ...emptyBreakdown(), signups: us.signups + rest.signups };
+  addBreakdown(world, us);
+  addBreakdown(world, rest);
+
   return {
     generatedAt: raw.fetchedAt,
     origin: raw.origin,
     events: events
       .map((e): EventDetail => ({ ...e, breakdown: e.total >= MIN_BREAKDOWN ? e.breakdown : null }))
       .sort((a, b) => a.name.localeCompare(b.name)),
-    combined: combineBreakdowns(events),
+    combined: { world, us },
   };
 }

@@ -506,3 +506,38 @@
     padding-top: 0;
   }
 }
+
+/* World / US switch in the hero */
+.scope-toggle {
+  display: inline-flex;
+  gap: 4px;
+  margin-top: 20px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.22);
+}
+
+.scope-toggle button {
+  height: 36px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  font-family: var(--display);
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.scope-toggle button:hover {
+  background: rgb(255 255 255 / 0.2);
+}
+
+.scope-toggle button[aria-pressed="true"] {
+  background: #fff;
+  color: var(--orange);
+}

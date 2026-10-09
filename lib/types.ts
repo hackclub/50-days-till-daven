@@ -1,3 +1,4 @@
+import type { Scope } from "./scope";
 import type { Source } from "./sources";
 
 export type RawEvent = {
@@ -59,7 +60,7 @@ export type HavenData = {
   generatedAt: number;
   origin: RawData["origin"];
   events: EventDetail[];
-  combined?: CombinedBreakdown; // missing from pulls saved before /global existed
+  combined?: Record<Scope, CombinedBreakdown>; // missing from pulls saved before /global existed
 };
 
 /** Every event's breakdown added together (see aggregate.ts), and how many signups it covers. */
