@@ -14,7 +14,11 @@ async function GlobalContent() {
   const data = await getHavenData();
   return (
     <>
-      <GlobalView stats={globalStats(data)} events={data.events.map(toSummary)} generatedAt={data.generatedAt} />
+      <GlobalView
+        stats={{ world: globalStats(data, "world"), us: globalStats(data, "us") }}
+        events={data.events.map(toSummary)}
+        generatedAt={data.generatedAt}
+      />
       <Footer generatedAt={data.generatedAt} />
     </>
   );

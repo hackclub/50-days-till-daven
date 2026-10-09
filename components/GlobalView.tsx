@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import { chartDate, formatDay, PROGRAM_START_INDEX } from "@/lib/dates";
+import { inScope, type Scope } from "@/lib/scope";
 import { computeStreak } from "@/lib/streak";
 import type { EventSummary, GlobalStats } from "@/lib/types";
 import { Breakdowns, medianAge } from "./Breakdowns";
@@ -14,9 +16,18 @@ import { useNow } from "./useNow";
 const TOP_COUNTRIES = 10;
 const day = (i: number) => formatDay(chartDate(i));
 const fmt = (n: number) => n.toLocaleString("en-US");
+const SCOPES: { scope: Scope; label: string }[] = [
+  { scope: "world", label: "World" },
+  { scope: "us", label: "US" },
+];
 
-export function GlobalView({ stats: g, events, generatedAt }: { stats: GlobalStats; events: EventSummary[]; generatedAt: number }) {
+type Props = { stats: Record<Scope, GlobalStats>; events: EventSummary[]; generatedAt: number };
+
+export function GlobalView({ stats, events: all, generatedAt }: Props) {
   const { now, tz } = useNow(generatedAt, 15_000);
+  const [scope, setScope] = useState<Scope>("world");
+  const g = stats[scope];
+  const events = all.filter((e) => inScope(e.country, scope));
   const streaks = events.map((e) => computeStreak(e.days, e.tz, now));
   // every haven counts its own local day, so the latest day shown is the furthest-ahead haven's today
   const todayIndex = Math.max(PROGRAM_START_INDEX - 1, ...streaks.map((s) => s.todayIndex));
@@ -56,10 +67,17 @@ export function GlobalView({ stats: g, events, generatedAt }: { stats: GlobalSta
       <header className="hero ev-hero">
         <HeroNav now={now} tz={tz} back />
         <div className="hero-inner">
-          <h1 className="ev-title glow">All signups</h1>
+          <h1 className="ev-title glow">{scope === "us" ? "US signups" : "All signups"}</h1>
           <p className="ev-sub glow">
-            {events.length} havens in {byCountry.size} countries
+            {events.length} havens {scope === "us" ? "in the US" : `in ${byCountry.size} countries`}
           </p>
+          <div className="scope-toggle" role="group" aria-label="Which havens to count">
+            {SCOPES.map((o) => (
+              <button key={o.scope} type="button" aria-pressed={scope === o.scope} onClick={() => setScope(o.scope)}>
+                {o.label}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
@@ -107,16 +125,18 @@ export function GlobalView({ stats: g, events, generatedAt }: { stats: GlobalSta
 
         {b && b.signups > 0 && <Breakdowns b={b} signups={b.signups} />}
 
-        <section className="panel">
-          <div className="panel-head">
-            <h2>Top countries</h2>
-          </div>
-          {countries.length > 0 ? (
-            <HBars rows={countries.slice(0, TOP_COUNTRIES)} total={g.total} />
-          ) : (
-            <p className="empty">Nothing yet.</p>
-          )}
-        </section>
+        {scope === "world" && (
+          <section className="panel">
+            <div className="panel-head">
+              <h2>Top countries</h2>
+            </div>
+            {countries.length > 0 ? (
+              <HBars rows={countries.slice(0, TOP_COUNTRIES)} total={g.total} />
+            ) : (
+              <p className="empty">Nothing yet.</p>
+            )}
+          </section>
+        )}
       </main>
     </>
   );
