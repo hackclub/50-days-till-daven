@@ -59,6 +59,18 @@ export type HavenData = {
   generatedAt: number;
   origin: RawData["origin"];
   events: EventDetail[];
+  combined?: CombinedBreakdown; // missing from pulls saved before /global existed
+};
+
+/** Every event's breakdown added together (see aggregate.ts), and how many signups it covers. */
+export type CombinedBreakdown = Breakdown & { signups: number };
+
+/** What /global shows: every event added together, each day still in each event's own timezone. */
+export type GlobalStats = {
+  days: number[];
+  before: number;
+  total: number;
+  breakdown: CombinedBreakdown | null;
 };
 
 export const AGE_BUCKETS = ["≤12", "13", "14", "15", "16", "17", "18", "19+"];

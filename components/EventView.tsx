@@ -3,18 +3,14 @@
 import Image from "next/image";
 import { MIN_BREAKDOWN, REWARD, STREAK_GOAL } from "@/lib/config";
 import { chartDate, formatClock, formatDay, PROGRAM_START_INDEX } from "@/lib/dates";
-import { SOURCES } from "@/lib/sources";
 import { computeStreak, type Streak } from "@/lib/streak";
-import { AGE_BUCKETS, type EventDetail, type EventSummary } from "@/lib/types";
-import { Columns } from "./charts/Columns";
+import type { EventDetail, EventSummary } from "@/lib/types";
+import { Breakdowns, medianAge } from "./Breakdowns";
 import { ContributionGrid } from "./charts/ContributionGrid";
 import { Cumulative } from "./charts/Cumulative";
-import { HBars } from "./charts/HBars";
 import { HeroNav } from "./HeroNav";
 import { useNow } from "./useNow";
 
-const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const HOURS = Array.from({ length: 24 }, (_, h) => (h === 0 ? "12am" : h < 12 ? `${h}am` : h === 12 ? "12pm" : `${h - 12}pm`));
 const day = (i: number) => formatDay(chartDate(i));
 
 function goalLine(s: Streak) {
@@ -23,15 +19,6 @@ function goalLine(s: Streak) {
   const left = STREAK_GOAL - s.current;
   const finish = s.todayIndex + left - (s.countsToday ? 0 : 1);
   return `${left} more ${left === 1 ? "day" : "days"}, ${day(finish)} at the earliest`;
-}
-
-function medianBucket(ages: number[]) {
-  const total = ages.reduce((a, b) => a + b, 0);
-  for (let k = 0, run = 0; k < ages.length && total; k++) {
-    run += ages[k];
-    if (run >= total / 2) return AGE_BUCKETS[k];
-  }
-  return "–";
 }
 
 export function EventView({ event: e, all, generatedAt }: { event: EventDetail; all: EventSummary[]; generatedAt: number }) {
@@ -44,12 +31,6 @@ export function EventView({ event: e, all, generatedAt }: { event: EventDetail; 
     if (i <= s.todayIndex && n > 0 && (bestDay < 0 || n > e.days[bestDay])) bestDay = i;
   });
   const b = e.breakdown;
-  const answered = b ? e.total - b.unanswered : 0;
-  const sources = b
-    ? SOURCES.map((label) => ({ label, value: b.sources[label] ?? 0 }))
-        .filter((r) => r.value > 0)
-        .sort((x, y) => y.value - x.value)
-    : [];
   const meter = s.qualified ? STREAK_GOAL : Math.min(s.current, STREAK_GOAL);
   // program days that ended without a signup (today still has until midnight)
   const missed: number[] = [];
@@ -63,7 +44,7 @@ export function EventView({ event: e, all, generatedAt }: { event: EventDetail; 
     ...(b
       ? [
           { label: "Via referral", value: `${Math.round((b.referred / e.total) * 100)}%` },
-          { label: "Median age", value: medianBucket(b.ages) },
+          { label: "Median age", value: medianAge(b.ages) },
         ]
       : []),
   ];
@@ -191,32 +172,7 @@ export function EventView({ event: e, all, generatedAt }: { event: EventDetail; 
         </section>
 
         {b ? (
-          <div className="ev-pair">
-            <section className="panel">
-              <div className="panel-head">
-                <h2>By weekday</h2>
-              </div>
-              <Columns values={b.weekdays} labels={WEEKDAYS} ariaLabel="Signups by weekday" />
-            </section>
-            <section className="panel">
-              <div className="panel-head">
-                <h2>By hour</h2>
-              </div>
-              <Columns values={b.hours} labels={HOURS} showLabel={(h) => h % 6 === 0} ariaLabel="Signups by local hour of day" />
-            </section>
-            <section className="panel">
-              <div className="panel-head">
-                <h2>Ages</h2>
-              </div>
-              <Columns values={b.ages} labels={AGE_BUCKETS} unit={["person", "people"]} ariaLabel="Signups by age" />
-            </section>
-            <section className="panel">
-              <div className="panel-head">
-                <h2>How they heard</h2>
-              </div>
-              {sources.length > 0 ? <HBars rows={sources} total={answered} /> : <p className="empty">Nothing yet.</p>}
-            </section>
-          </div>
+          <Breakdowns b={b} signups={e.total} />
         ) : (
           <p className="panel note">More stats after {MIN_BREAKDOWN} signups.</p>
         )}

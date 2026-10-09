@@ -22,6 +22,7 @@ export function Dashboard({ events, generatedAt }: { events: EventSummary[]; gen
 
   const rows: Row[] = events.map((e) => ({ e, s: computeStreak(e.days, e.tz, now) }));
   const streaking = rows.filter((r) => r.s.current > 0);
+  const signups = events.reduce((n, e) => n + e.total, 0);
 
   const markers: GlobeMarker[] = rows
     .filter((r) => r.e.lat !== null && r.e.lon !== null)
@@ -45,9 +46,17 @@ export function Dashboard({ events, generatedAt }: { events: EventSummary[]; gen
           <div className="home-copy">
             <Image className="home-logo" src="/haven/logo.webp" alt="Hack Club Haven" width={762} height={491} preload />
             <h1 className="home-title glow">50 days till Daven</h1>
-            <p className="home-stat glow">
-              <span className="home-stat-n">{streaking.length}</span> havens on a streak
-            </p>
+            <div className="home-stats">
+              <p className="home-stat glow">
+                <span className="home-stat-n">{streaking.length}</span> havens on a streak
+              </p>
+              <Link href="/global" className="home-stat home-stat-link glow">
+                <span className="home-stat-n">{signups.toLocaleString("en-US")}</span> signups
+                <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
           </div>
           <div className="home-globe">
             <Globe markers={markers} label={`Globe of ${markers.length} Haven events, ${streaking.length} on a streak.`} />
