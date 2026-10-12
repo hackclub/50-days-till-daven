@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { GLOBAL_TZ } from "@/lib/config";
 import { chartDate, formatDay, PROGRAM_START_INDEX } from "@/lib/dates";
 import { inScope, type Scope } from "@/lib/scope";
 import { computeStreak } from "@/lib/streak";
@@ -24,14 +25,12 @@ const SCOPES: { scope: Scope; label: string }[] = [
 type Props = { stats: Record<Scope, GlobalStats>; events: EventSummary[]; generatedAt: number };
 
 export function GlobalView({ stats, events: all, generatedAt }: Props) {
-  const { now, tz } = useNow(generatedAt, 15_000);
+  const { now } = useNow(generatedAt, 15_000);
   const [scope, setScope] = useState<Scope>("world");
   const g = stats[scope];
   const events = all.filter((e) => inScope(e.country, scope));
-  const streaks = events.map((e) => computeStreak(e.days, e.tz, now));
-  // every haven counts its own local day, so the latest day shown is the furthest-ahead haven's today
-  const todayIndex = Math.max(PROGRAM_START_INDEX - 1, ...streaks.map((s) => s.todayIndex));
-  const today = streaks.reduce((n, s) => n + s.today, 0);
+  // every day on this page is an Eastern Time day, so "today" is today in ET
+  const { todayIndex, today } = computeStreak(g.days, GLOBAL_TZ, now);
 
   const programDays = g.days.slice(PROGRAM_START_INDEX, todayIndex + 1);
   let bestDay = -1;
@@ -65,12 +64,13 @@ export function GlobalView({ stats, events: all, generatedAt }: Props) {
   return (
     <>
       <header className="hero ev-hero">
-        <HeroNav now={now} tz={tz} back />
+        <HeroNav now={now} tz={GLOBAL_TZ} back />
         <div className="hero-inner">
           <h1 className="ev-title glow">{scope === "us" ? "US signups" : "All signups"}</h1>
           <p className="ev-sub glow">
             {events.length} havens {scope === "us" ? "in the US" : `in ${byCountry.size} countries`}
           </p>
+          <p className="gl-tz glow">Days and hours on this page are in Eastern Time (ET).</p>
           <div className="scope-toggle" role="group" aria-label="Which havens to count">
             {SCOPES.map((o) => (
               <button key={o.scope} type="button" aria-pressed={scope === o.scope} onClick={() => setScope(o.scope)}>
@@ -123,7 +123,7 @@ export function GlobalView({ stats, events: all, generatedAt }: Props) {
           <Cumulative days={g.days} before={g.before} todayIndex={todayIndex} />
         </section>
 
-        {b && b.signups > 0 && <Breakdowns b={b} signups={b.signups} />}
+        {b && b.signups > 0 && <Breakdowns b={b} signups={b.signups} hourLabel="hour of day in Eastern Time" />}
 
         {scope === "world" && (
           <section className="panel">
