@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { MIN_BREAKDOWN, REWARD, STREAK_GOAL } from "@/lib/config";
+import { DOUBLE_GOAL, DOUBLE_MIN, MIN_BREAKDOWN, REWARD, STREAK_GOAL } from "@/lib/config";
 import { chartDate, formatClock, formatDay, PROGRAM_START_INDEX } from "@/lib/dates";
-import { computeStreak, streakRank, type Streak } from "@/lib/streak";
+import { computeStreak, streakRank, type Run } from "@/lib/streak";
 import type { EventDetail, EventSummary } from "@/lib/types";
 import { Breakdowns, medianAge } from "./Breakdowns";
 import { ContributionGrid } from "./charts/ContributionGrid";
@@ -13,25 +13,53 @@ import { useNow } from "./useNow";
 
 const day = (i: number) => formatDay(chartDate(i));
 
-function goalLine(s: Streak) {
-  if (s.qualified) return `${REWARD} earned`;
-  if (!s.reachable) return "Out of reach before Haven";
-  const left = STREAK_GOAL - s.current;
-  const finish = s.todayIndex + left - (s.countsToday ? 0 : 1);
+function goalLine(r: Run, goal: number, todayIndex: number) {
+  if (r.qualified) return `${REWARD} earned`;
+  if (!r.reachable) return "Out of reach before Haven";
+  const left = goal - r.current;
+  const finish = todayIndex + left - (r.countsToday ? 0 : 1);
   return `${left} more ${left === 1 ? "day" : "days"}, ${day(finish)} at the earliest`;
+}
+
+function Goal({ r, goal, todayIndex }: { r: Run; goal: number; todayIndex: number }) {
+  const meter = r.qualified ? goal : Math.min(r.current, goal);
+  return (
+    <div className="ev-goal">
+      <p className="ev-goal-head">
+        <span>
+          {goal} days → {REWARD}
+        </span>
+        <span className="num">
+          {meter}/{goal}
+        </span>
+      </p>
+      <div
+        className={`goal-meter${r.reachable ? "" : " out"}`}
+        style={{ gridTemplateColumns: `repeat(${goal}, 1fr)` }}
+        aria-hidden="true"
+      >
+        {Array.from({ length: goal }, (_, i) => (
+          <span key={i} className={i < meter ? "on" : undefined} />
+        ))}
+      </div>
+      <p className="muted">{goalLine(r, goal, todayIndex)}</p>
+    </div>
+  );
 }
 
 export function EventView({ event: e, all, generatedAt }: { event: EventDetail; all: EventSummary[]; generatedAt: number }) {
   const { now, tz } = useNow(generatedAt, 15_000);
   const s = computeStreak(e.days, e.tz, now);
+  const d = s.double;
 
-  const rank = s.current > 0 ? streakRank(s.current, all.map((o) => computeStreak(o.days, o.tz, now).current)) : null;
+  const others = all.map((o) => computeStreak(o.days, o.tz, now));
+  const rank = s.current > 0 ? streakRank(s.current, others.map((o) => o.current)) : null;
+  const doubleRank = d.current > 0 ? streakRank(d.current, others.map((o) => o.double.current)) : null;
   let bestDay = -1;
   e.days.forEach((n, i) => {
     if (i <= s.todayIndex && n > 0 && (bestDay < 0 || n > e.days[bestDay])) bestDay = i;
   });
   const b = e.breakdown;
-  const meter = s.qualified ? STREAK_GOAL : Math.min(s.current, STREAK_GOAL);
   // program days that ended without a signup (today still has until midnight)
   const missed: number[] = [];
   for (let i = PROGRAM_START_INDEX; i < s.todayIndex; i++) if (!e.days[i]) missed.push(i);
@@ -78,21 +106,33 @@ export function EventView({ event: e, all, generatedAt }: { event: EventDetail; 
               </p>
             </div>
           </div>
-          <div className="ev-goal">
-            <p className="ev-goal-head">
-              <span>
-                {STREAK_GOAL} days → {REWARD}
-              </span>
-              <span className="num">
-                {meter}/{STREAK_GOAL}
-              </span>
-            </p>
-            <div className={`goal-meter${s.reachable ? "" : " out"}`} aria-hidden="true">
-              {Array.from({ length: STREAK_GOAL }, (_, i) => (
-                <span key={i} className={i < meter ? "on" : undefined} />
-              ))}
+          <Goal r={s} goal={STREAK_GOAL} todayIndex={s.todayIndex} />
+        </section>
+
+        <section className="panel">
+          <div className="panel-head">
+            <h2>{DOUBLE_MIN} signups/day</h2>
+          </div>
+          <div className="ev-top">
+            <div className="ev-streak">
+              {d.current > 0 ? (
+                <Image className="ev-daven double" src="/haven/excited-daven.webp" alt="" width={791} height={695} />
+              ) : (
+                <Image className="ev-daven evil-face double" src="/haven/evil-daven-face.jpg" alt="Evil Daven" width={320} height={320} />
+              )}
+              <div>
+                <p className="ev-num">{d.current}</p>
+                <p className="ev-unit">day streak</p>
+                <p className="muted">
+                  best {d.longest}
+                  {doubleRank ? ` · #${doubleRank} of ${all.length}` : ""}
+                </p>
+                <p className="muted">
+                  {d.activeDays}/{s.dayOfProgram} days with {DOUBLE_MIN}+ signups
+                </p>
+              </div>
             </div>
-            <p className="muted">{goalLine(s)}</p>
+            <Goal r={d} goal={DOUBLE_GOAL} todayIndex={s.todayIndex} />
           </div>
         </section>
 

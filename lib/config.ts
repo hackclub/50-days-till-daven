@@ -5,6 +5,9 @@ export const PROGRAM_DAYS = 50; // Sept 25 → Nov 13
 export const HAVEN_DATE = "2026-11-14";
 export const STREAK_GOAL = 30;
 export const REWARD = "$100";
+// The other way to earn REWARD, added Oct 12: at least DOUBLE_MIN signups a day, DOUBLE_GOAL days in a row.
+export const DOUBLE_MIN = 2;
+export const DOUBLE_GOAL = 14;
 
 // Below this many signups an event's age/hour/weekday/source/referral breakdowns aren't published:
 // with one or two signups they'd describe a specific teenager.
