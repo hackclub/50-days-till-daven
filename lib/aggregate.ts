@@ -1,14 +1,18 @@
 import "server-only";
 import tzlookup from "@photostructure/tz-lookup";
-import { CHART_DAYS, MIN_BREAKDOWN } from "./config";
+import { CHART_DAYS, GLOBAL_TZ, MIN_BREAKDOWN } from "./config";
 import { chartIndex, localParts } from "./dates";
 import { inScope } from "./scope";
 import type { Source } from "./sources";
-import { AGE_BUCKETS, type Breakdown, type CombinedBreakdown, type EventDetail, type HavenData, type RawData } from "./types";
+import { AGE_BUCKETS, type Breakdown, type CombinedBreakdown, type EventDetail, type GlobalStats, type HavenData, type RawData } from "./types";
 
 // Turns a raw pull into exactly what the pages show: per-event daily counts in local time, plus
-// breakdowns (left out below MIN_BREAKDOWN signups) and all of them combined for /global, worldwide and US only.
-// Shared by /api/pull and scripts/pull.ts.
+// breakdowns (left out below MIN_BREAKDOWN signups), and all of them combined in Eastern Time for
+// /global, worldwide and US only. Shared by /api/pull and scripts/pull.ts.
+
+/** One event's signups counted on Eastern Time days, hours and weekdays, for /global. */
+type EtCounts = { days: number[]; before: number; hours: number[]; weekdays: number[] };
+type Working = EventDetail & { breakdown: Breakdown; et: EtCounts };
 
 function timezoneFor(lat: number | null, lon: number | null) {
   if (lat === null || lon === null) return "UTC";
@@ -42,24 +46,27 @@ function addBreakdown(to: Breakdown, from: Breakdown) {
 }
 
 /**
- * Events below MIN_BREAKDOWN only go into a combined breakdown together, and only once they add up
- * to MIN_BREAKDOWN signups: otherwise subtracting the published per-event breakdowns from it would
- * give back a small event's own.
+ * Every event's Eastern Time counts added together. Events below MIN_BREAKDOWN only go into the
+ * breakdown together, and only once they add up to MIN_BREAKDOWN signups: otherwise subtracting the
+ * published per-event breakdowns from it would give back a small event's own.
  */
-function combineBreakdowns(events: (EventDetail & { breakdown: Breakdown })[]): CombinedBreakdown {
+function combine(events: Working[]): GlobalStats & { breakdown: CombinedBreakdown } {
   const small = events.filter((e) => e.total < MIN_BREAKDOWN);
   const pooled = small.reduce((n, e) => n + e.total, 0) >= MIN_BREAKDOWN;
-  const combined = { ...emptyBreakdown(), signups: 0 };
+  const g = { days: new Array(CHART_DAYS).fill(0), before: 0, total: 0, breakdown: { ...emptyBreakdown(), signups: 0 } };
   for (const e of events) {
+    e.et.days.forEach((n, i) => (g.days[i] += n));
+    g.before += e.et.before;
+    g.total += e.total;
     if (e.total < MIN_BREAKDOWN && !pooled) continue;
-    addBreakdown(combined, e.breakdown);
-    combined.signups += e.total;
+    addBreakdown(g.breakdown, { ...e.breakdown, hours: e.et.hours, weekdays: e.et.weekdays });
+    g.breakdown.signups += e.total;
   }
-  return combined;
+  return g;
 }
 
 export function aggregate(raw: RawData): HavenData {
-  const byId = new Map<string, EventDetail & { breakdown: Breakdown }>();
+  const byId = new Map<string, Working>();
   for (const e of raw.events) {
     if (e.status !== "Active") continue; // also filters old snapshots
     byId.set(e.id, {
@@ -75,6 +82,7 @@ export function aggregate(raw: RawData): HavenData {
       total: 0,
       before: 0,
       breakdown: emptyBreakdown(),
+      et: { days: new Array(CHART_DAYS).fill(0), before: 0, hours: new Array(24).fill(0), weekdays: new Array(7).fill(0) },
     });
   }
 
@@ -93,23 +101,37 @@ export function aggregate(raw: RawData): HavenData {
     if (s.source) b.sources[s.source] = (b.sources[s.source] ?? 0) + 1;
     else b.unanswered++;
     if (s.referred) b.referred++;
+
+    const et = localParts(s.time, GLOBAL_TZ);
+    const j = chartIndex(et.date);
+    if (j < 0) e.et.before++;
+    else if (j < CHART_DAYS) e.et.days[j]++;
+    e.et.hours[et.hour]++;
+    e.et.weekdays[et.weekday]++;
   }
 
   // Worldwide is the US and everywhere else added together, each pooled on its own, so subtracting
   // the US-only breakdown from it can't single out a small event outside the US either.
   const events = [...byId.values()];
-  const us = combineBreakdowns(events.filter((e) => inScope(e.country, "us")));
-  const rest = combineBreakdowns(events.filter((e) => !inScope(e.country, "us")));
-  const world = { ...emptyBreakdown(), signups: us.signups + rest.signups };
-  addBreakdown(world, us);
-  addBreakdown(world, rest);
+  const us = combine(events.filter((e) => inScope(e.country, "us")));
+  const rest = combine(events.filter((e) => !inScope(e.country, "us")));
+  const world = {
+    days: us.days.map((n, i) => n + rest.days[i]),
+    before: us.before + rest.before,
+    total: us.total + rest.total,
+    breakdown: { ...emptyBreakdown(), signups: us.breakdown.signups + rest.breakdown.signups },
+  };
+  addBreakdown(world.breakdown, us.breakdown);
+  addBreakdown(world.breakdown, rest.breakdown);
 
   return {
     generatedAt: raw.fetchedAt,
     origin: raw.origin,
     events: events
-      .map((e): EventDetail => ({ ...e, breakdown: e.total >= MIN_BREAKDOWN ? e.breakdown : null }))
+      // an event's own ET counts only go into /global's totals and aren't published
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      .map(({ et, ...e }): EventDetail => ({ ...e, breakdown: e.total >= MIN_BREAKDOWN ? e.breakdown : null }))
       .sort((a, b) => a.name.localeCompare(b.name)),
-    combined: { world, us },
+    global: { world, us },
   };
 }

@@ -60,13 +60,13 @@ export type HavenData = {
   generatedAt: number;
   origin: RawData["origin"];
   events: EventDetail[];
-  combined?: Record<Scope, CombinedBreakdown>; // missing from pulls saved before /global existed
+  global?: Record<Scope, GlobalStats>; // missing from pulls saved before /global went to Eastern Time
 };
 
 /** Every event's breakdown added together (see aggregate.ts), and how many signups it covers. */
 export type CombinedBreakdown = Breakdown & { signups: number };
 
-/** What /global shows: every event added together, each day still in each event's own timezone. */
+/** What /global shows: every event added together, on Eastern Time days and hours (GLOBAL_TZ). */
 export type GlobalStats = {
   days: number[];
   before: number;
