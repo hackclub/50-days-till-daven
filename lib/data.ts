@@ -26,10 +26,8 @@ export function toSummary(e: EventDetail): EventSummary {
   return { slug, name, city, country, cap, lat, lon, tz, days, total };
 }
 
-/** Every event in `scope` added together for /global, on Eastern Time days (worked out in aggregate.ts). */
+/** Every event in `scope` added together for /global. A day is still each event's own local day. */
 export function globalStats(data: HavenData, scope: Scope): GlobalStats {
-  if (data.global) return data.global[scope];
-  // a pull saved before /global went to Eastern Time: each event's own local days, until the next pull
   const days = new Array(CHART_DAYS).fill(0);
   let before = 0;
   let total = 0;
@@ -39,7 +37,7 @@ export function globalStats(data: HavenData, scope: Scope): GlobalStats {
     before += e.before;
     total += e.total;
   }
-  return { days, before, total, breakdown: null };
+  return { days, before, total, breakdown: data.combined?.[scope] ?? null };
 }
 
 export function findEvent(data: HavenData, param: string) {

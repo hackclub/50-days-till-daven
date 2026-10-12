@@ -5,7 +5,7 @@ A public dashboard for the 50 Days Till Daven streak program for Hack Club Haven
 Each Haven event needs at least one new signup every day from Sept 25 to Nov 13 (50 days before Haven on Nov 14). Days run midnight to midnight in the event's own timezone. An event that holds a 30-day streak earns $100.
 
 - `/` shows a globe of every event (dot size is streak length), the havens on a streak ranked by length, and the ones without a streak.
-- `/global` adds every haven together: total signups, signups per day, a running total, the same breakdowns as an event page, and the top countries. A toggle switches it to US havens only. Its days and hours are Eastern Time (`GLOBAL_TZ`), not each haven's own.
+- `/global` adds every haven together: total signups, signups per day, a running total, the same breakdowns as an event page, and the top countries. A toggle switches it to US havens only.
 - `/<slug>` (the `Slug` from the Airtable Events table) shows one event's streak, its progress toward 30 days, a GitHub-style daily calendar, a running total, and signups by weekday, local hour, age and how people heard about Haven.
 
 The look, fonts and artwork come from [haven.hackclub.com](https://haven.hackclub.com) ([hackclub/haven](https://github.com/hackclub/haven)).
