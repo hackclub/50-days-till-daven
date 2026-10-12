@@ -11,8 +11,8 @@ async function main() {
   if (!token) return console.log("[haven] no AIRTABLE_TOKEN, skipping the pull");
 
   const saved = await readHavenData();
-  // a pull saved before /global went to Eastern Time has no `global`, so it's replaced whatever its age
-  if (saved?.global && Date.now() - saved.generatedAt < PULL_EVERY_MS) {
+  // a pull saved before /global's US toggle has no combined.us, so it's replaced whatever its age
+  if (saved?.combined?.us && Date.now() - saved.generatedAt < PULL_EVERY_MS) {
     return console.log(`[haven] saved pull is ${Math.round((Date.now() - saved.generatedAt) / 60_000)}m old, skipping`);
   }
   const t0 = Date.now();

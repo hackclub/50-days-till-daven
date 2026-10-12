@@ -4,8 +4,6 @@ export const PROGRAM_START = "2026-09-25"; // day 1, in each event's local timez
 export const PROGRAM_DAYS = 50; // Sept 25 → Nov 13
 export const HAVEN_DATE = "2026-11-14";
 export const STREAK_GOAL = 30;
-// /global counts every haven's signups on Eastern Time days and hours instead of each haven's own.
-export const GLOBAL_TZ = "America/New_York";
 export const REWARD = "$100";
 
 // Below this many signups an event's age/hour/weekday/source/referral breakdowns aren't published:

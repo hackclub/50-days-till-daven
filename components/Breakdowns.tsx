@@ -16,7 +16,7 @@ export function medianAge(ages: number[]) {
 }
 
 /** Weekday, hour, age and "how they heard" panels; `signups` is how many people `b` covers. */
-export function Breakdowns({ b, signups, hourLabel = "local hour of day" }: { b: Breakdown; signups: number; hourLabel?: string }) {
+export function Breakdowns({ b, signups }: { b: Breakdown; signups: number }) {
   const answered = signups - b.unanswered;
   const sources = SOURCES.map((label) => ({ label, value: b.sources[label] ?? 0 }))
     .filter((r) => r.value > 0)
@@ -34,7 +34,7 @@ export function Breakdowns({ b, signups, hourLabel = "local hour of day" }: { b:
         <div className="panel-head">
           <h2>By hour</h2>
         </div>
-        <Columns values={b.hours} labels={HOURS} showLabel={(h) => h % 6 === 0} ariaLabel={`Signups by ${hourLabel}`} />
+        <Columns values={b.hours} labels={HOURS} showLabel={(h) => h % 6 === 0} ariaLabel="Signups by local hour of day" />
       </section>
       <section className="panel">
         <div className="panel-head">

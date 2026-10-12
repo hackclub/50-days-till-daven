@@ -507,12 +507,6 @@
   }
 }
 
-/* /global's timezone note under the subtitle */
-.gl-tz {
-  margin-top: 6px;
-  font-size: 15px;
-}
-
 /* World / US switch in the hero */
 .scope-toggle {
   display: inline-flex;
