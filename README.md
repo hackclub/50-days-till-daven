@@ -2,11 +2,11 @@
 
 A public dashboard for the 50 Days Till Daven streak program for Hack Club Haven.
 
-Each Haven event needs at least one new signup every day from Sept 25 to Nov 13 (50 days before Haven on Nov 14). Days run midnight to midnight in the event's own timezone. An event that holds a 30-day streak earns $100.
+Each Haven event needs at least one new signup every day from Sept 25 to Nov 13 (50 days before Haven on Nov 14). Days run midnight to midnight in the event's own timezone. An event earns $100 for either a 30-day streak of at least one signup a day, or a 14-day streak of at least two a day.
 
 - `/` shows a globe of every event (dot size is streak length), the havens on a streak ranked by length, and the ones without a streak.
 - `/global` adds every haven together: total signups, signups per day, a running total, the same breakdowns as an event page, and the top countries. A toggle switches it to US havens only.
-- `/<slug>` (the `Slug` from the Airtable Events table) shows one event's streak, its progress toward 30 days, a GitHub-style daily calendar, a running total, and signups by weekday, local hour, age and how people heard about Haven.
+- `/<slug>` (the `Slug` from the Airtable Events table) shows one event's streak and its progress toward 30 days, a separate card for the 2 signups/day streak and its progress toward 14 days, a GitHub-style daily calendar, a running total, and signups by weekday, local hour, age and how people heard about Haven.
 
 The look, fonts and artwork come from [haven.hackclub.com](https://haven.hackclub.com) ([hackclub/haven](https://github.com/hackclub/haven)).
 
@@ -15,6 +15,7 @@ The look, fonts and artwork come from [haven.hackclub.com](https://haven.hackclu
 - **Signups**: rows in the Attendees table with `Role = Participant`, excluding `Soft Deleted` (duplicates) and `!Withdrawn`.
 - **Day**: the `Signup Time` converted to the event's timezone. The timezone is looked up from the event's `!Latitude` / `!Longitude`.
 - **Current streak**: consecutive program days with at least one signup, ending today if today already has one, otherwise yesterday (today still has until local midnight).
+- **2-a-day streak**: the same, but only days with at least two signups count.
 - **Events**: everything in the Events table except `Cancelled` and `_Is Test`.
 
 The rules are in [`lib/config.ts`](lib/config.ts) and the logic is in [`lib/streak.ts`](lib/streak.ts). Streaks are computed in the browser against the live clock, so day rollovers stay accurate between data refreshes.
